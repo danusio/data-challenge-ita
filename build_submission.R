@@ -61,9 +61,7 @@ predComb = function(df, w){
 # Setup ----
 model_setup_rf = rand_forest(
   mode = "regression",
-  trees = 100,
-  mtry = 4,
-  min_n = 100
+  trees = 100
 ) 
 
 model_setup_glm = linear_reg(
@@ -105,14 +103,26 @@ for (tick in tickers) {
                                  mutate(target_date = as.numeric(target_date)), 
                                list_cor)
   
+  # test issues fix ----
+  test_prep = recipe(target ~ ., df_test_transf |> mutate(target = NA)) |> 
+    step_zv(all_predictors()) |> 
+    prep(training = df_test_transf |> mutate(target = NA))
+  
+  df_test_transf = bake(test_prep, df_test_transf |> mutate(target = NA)) |> 
+    select(-target)
+  
+  df_train_transf = bake(test_prep, df_train_transf)
+  
   # modeling ----
   model_rf = model_setup_rf |> 
+    set_args(mtry = round(sqrt(ncol(df_train_transf) - 1)),
+             min_n = 0.01*nrow(df_train_transf)) |> 
     fit(target ~ ., df_train_transf)
   
   model_glm = model_setup_glm |> 
     fit(target ~ ., df_train_transf)
   
-  # train prediction ----
+  # train/test prediction ----
   train_pred = bind_cols(
     predict(model_rf, df_train_transf) |> rename(.pred_rf = .pred),
     predict(model_glm, df_train_transf) |> rename(.pred_glm = .pred),
@@ -140,9 +150,12 @@ for (tick in tickers) {
   
   ans = optim(rep(1/3,3), fobj)
   w_opt = ans$par/sum(abs(ans$par))
-  print(w_opt |> round(3))
+  cat(ans$value); cat("\n")
+  cat(w_opt |> round(5))
   
   ypred = predComb(test_pred, w_opt)
   
   df_submission[,tick] = ypred
 }
+
+write_csv(df_submission, "predicao.csv")
