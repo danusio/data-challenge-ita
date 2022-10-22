@@ -34,11 +34,12 @@ applyCorFix = function(df, list_fix){
 }
 
 evalFn = function(df){
-  err = with(df, .actual - .pred)
-  EQM = mean(err^2)
-  s2 = var(err)
-  
-  sqrt(EQM + s2)
+  # err = with(df, .actual - .pred)
+  # EQM = mean(err^2)
+  # s2 = var(err)
+  # 
+  # sqrt(EQM + s2)
+  with(df, cor(.actual, .pred)^2)
 }
 
 getIndex = function(resamp) {
@@ -136,7 +137,7 @@ model_setup_rf = rand_forest(
 
 model_setup_svm = svm_linear(
   mode = "regression",
-  engine = "LiblineaR"
+  engine = "kernlab"
 ) 
 
 model_setup_lm = linear_reg(
