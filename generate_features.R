@@ -46,11 +46,11 @@ genIndicatorFeature = function(y, n){
 }
 
 # Technical Indicators ----
-df_full = NULL
+df_full <- df_future <- NULL
 for (ticker in tickers) {
   cat("Ticker: ");cat(ticker);cat("\n")
   
-  y = df_prices[,ticker]
+  y = df_prices[,ticker] |> zoo::na.locf0()
   df = cbind(
     genIndicatorFeature(y, round(period/2)),
     genIndicatorFeature(y, period),
@@ -69,6 +69,14 @@ for (ticker in tickers) {
                     target_date = df_prices[lagged_interval,"ref_date"],
                     df[lagged_interval - period,]
                   ) |> na.omit())
+  
+  df_future = rbind(df_future,
+                    data.frame(
+                      ticker = ticker,
+                      predictors_date = df_prices[(N-period+1):N,"ref_date"],
+                      df[(N-period+1):N,]
+                    ))
 }
 
 fst::write_fst(df_full, "lagged_dataframe.fst", compress = 100)
+fst::write_fst(df_future, "future_dataframe.fst", compress = 100)
