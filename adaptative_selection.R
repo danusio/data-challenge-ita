@@ -46,7 +46,7 @@ getWeights = function(pred, actual){
   w
 }
 
-getUtil = function(r, S) exp(r) - S # exp(r)^2 - S^2
+getUtil = function(r, S) exp(r)^2 - S^2 #  exp(r) - S 
 
 # data loading and setup ----
 df_returns = fst::read_fst("predictions_returns.fst")
