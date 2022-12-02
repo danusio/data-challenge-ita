@@ -1,5 +1,5 @@
 # data-challenge-ita
-Repo with the files for Data Challenge - ITA 2022
+Repo with the files for Data Challenge - ITA 2022 (W.I.P.)
 
 - `data_viz.R`: geração dos gráficos da fase 2
 - `adaptative_selection.R`: processo de seleção de portfólio da fase 2
