@@ -174,7 +174,7 @@ for (n in nstocks) {
     }
     
     log_returns = data.frame(
-      ref_date = time_vec,
+      ref_date = dates[seq(i, ndates, by=nperiods)],
       returns = rowMeans(R),
       returns_naive = r_naive,
       returns_sp500 = rowMeans(SP500)
@@ -265,6 +265,18 @@ log_returns |>
   geom_point(aes(y = returns))+
   xlab("retornos naïve") + ylab("retornos proposta")
 
+log_returns |> 
+  ggplot(aes(x = returns_sp500)) +
+  geom_point(aes(y = returns)) +
+  geom_smooth(aes(y = returns), method = "lm") +
+  xlab("retornos SP500") + ylab("retornos proposta")
+
+log_returns |> 
+  ggplot(aes(x = returns_sp500)) +
+  geom_point(aes(y = returns_naive)) +
+  geom_smooth(aes(y = returns_naive), method = "lm", color = "red") +
+  xlab("retornos SP500") + ylab("retornos naïve")
+
 # financial metrics
 y = with(log_returns, xts(returns, ref_date))
 y_naive = with(log_returns, xts(returns_naive, ref_date))
@@ -300,6 +312,27 @@ Q |> ggplot(aes(x = q)) +
   scale_y_continuous(labels = scales::percent) +
   scale_x_continuous(labels = scales::percent) + 
   labs(title = "VaR")
+
+arrayES = function(q, y) ES(y, q, method = "gaussian")
+
+E  = data.frame(
+  q = q,
+  ES_proposal = sapply(q, arrayES, y = y),
+  ES_naive = sapply(q, arrayES, y = y_naive),
+  ES_bench = sapply(q, arrayES, y = y_bench)
+)
+
+E |> ggplot(aes(x = q)) +
+  geom_line(aes(y = ES_bench, color = "SP500")) +
+  geom_line(aes(y = ES_naive, color = "Naive")) +
+  geom_line(aes(y = ES_proposal, color = "Proposta")) +
+  scale_color_manual(values = clr) +
+  guides(color = guide_legend(title = "Estratégia")) +
+  xlab("confiança") + ylab("expected shortfall") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_continuous(labels = scales::percent) + 
+  labs(title = "ES")
+
 
 draw = maxDrawdown(y, geometric = F)
 draw_naive = maxDrawdown(y_naive, geometric = F)
@@ -355,6 +388,8 @@ M3 = data.frame(
     naive = betaMeas(y_naive, y_bench)
   )
 )
+
+
 
 # modeling metrics
 
